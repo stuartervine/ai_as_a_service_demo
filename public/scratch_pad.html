@@ -1,0 +1,22 @@
+<html>
+<!-- The bits to copy and paste into the main file. -->
+<!-- step 1 the voice -->
+<head>
+    <script src="js/responsivevoice.js"></script>
+</head>
+<button onclick='responsiveVoice.speak("Hello World");'>Play voice</button>
+
+<!-- step 2 the video -->
+<button onclick="startVideoCapture();">Click to start</button>
+<div>
+    <video autoplay></video>
+    <canvas style="display:none;" width="640" height="480"></canvas>
+</div>
+
+<!-- step 3 the microsoft keys -->
+<input id="ocpApiKey" type="text" placeholder="OCP API Key" value="????"/>
+
+<!-- step 4 the pollers -->
+<button onclick="startPolling();">Click to start polling</button>
+<button onclick="stopPolling();">Click to stop polling</button>
+</html>
