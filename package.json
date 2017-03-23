@@ -4,7 +4,8 @@
   "license": "MIT",
   "author": "Stuart Ervine",
   "scripts": {
-    "app": "nodemon -e js,json,html --watch . app.js"
+    "app": "nodemon -e js,json,html --watch . app.js",
+    "magicmirror": "nodemon -e js,json,html,png --watch . magicMirror.js"
   },
   "dependencies": {
     "aws-sdk": ">= 2.30.0",

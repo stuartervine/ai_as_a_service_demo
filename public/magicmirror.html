@@ -1,0 +1,99 @@
+<html>
+<title>Some awesome AI service demos</title>
+<head>
+    <script src="js/responsivevoice.js"></script>
+    <script src="js/dataToBlobs.js"></script>
+    <style>
+        body {
+            background-color: #c0b7ba;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <button onclick='responsiveVoice.speak("Look into the magic mirror...", "French Female");'>Play voice</button>
+    <button onclick="startVideoCapture();">Click to start video</button>
+    <button onclick="startPolling();">Click to start polling</button>
+    <button onclick="stopPolling();">Click to stop polling</button>
+</div>
+<div>
+    <div>
+        <video style="position:absolute;left:0;top:50px;" autoplay></video>
+        <img style="position:absolute;left:0;top:50px;" onclick="snapshot();" src="images/mirror.png">
+    </div>
+    <canvas style="display:none;" width="640" height="480"></canvas>
+</div>
+<script>
+
+    const offers = {
+        'vegetarian': {
+            text: 'did you know we have some instore offers on all fruits, that fall off trees, they are 3 for 2.',
+            voice: 'UK English Female'
+        },
+        'gluten free': {
+            text: 'you might want to try out our new range of gluten free breads. They are really tasty',
+            voice: 'UK English Male'
+        },
+        'a barbecue lover': {
+            text: "Why don't you throw another shrimp on the barbie, pop a tinny and have a look at our great summer range of meats",
+            voice: 'Australian Female'
+        }
+    };
+
+    const video = document.querySelector('video');
+    const canvas = document.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    var currentlyViewedPerson = '';
+    
+    function startPolling() {
+        timer = setInterval(function () {
+            snapshot()
+        }, 5000);
+    }
+
+    function stopPolling() {
+        clearInterval(timer);
+    }
+    function snapshot() {
+        console.log("Taking snapshot and sending to AI");
+        ctx.drawImage(video, 0, 0);
+        processMagicMirror(responsiveVoice.speak);
+    }
+
+    function startVideoCapture() {
+        navigator.getUserMedia({video: true, audio: false}, function (stream) {
+            video.addEventListener('click', snapshot, false);
+            video.src = window.URL.createObjectURL(stream);
+        }, function () {
+            console.log("Some weird video error.");
+        });
+    }
+
+    function processMagicMirror(speakFn) {
+        const requestDetails = {
+            method: 'POST',
+            body: canvas.toDataURL("image/png"),
+            headers: new Headers({
+                "Content-Type": "application/octet-stream"
+            }),
+            mode: 'no-cors',
+            cache: 'default'
+        };
+
+        fetch('http://localhost:5001/findUser', requestDetails)
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (json) {
+                if(currentlyViewedPerson !== json.name) {
+                    currentlyViewedPerson = json.name;
+                    const offer = offers[json.profile];
+                    speakFn('Hello ' + json.name + ', how was the ' + json.lastPurchase.name + '.', offer.voice, {rate: 0.9});
+                    speakFn('As you are ' + json.profile, offer.voice, {rate: 0.9});
+                    speakFn(offer.text, offer.voice, {rate: 0.9});
+                }
+            });
+    }
+</script>
+</body>
+</html>

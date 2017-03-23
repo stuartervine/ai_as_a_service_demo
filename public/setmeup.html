@@ -1,0 +1,109 @@
+<html>
+<title>Some awesome AI service demos</title>
+<head>
+    <script src="js/responsivevoice.js"></script>
+    <script src="js/dataToBlobs.js"></script>
+</head>
+<body>
+<div>
+    <video autoplay></video>
+    <canvas width="640" height="480"></canvas>
+</div>
+<div>
+    <button onclick="storeUser();">Save User</button>
+    <button onclick="deleteTestData();">Delete Test Data</button>
+    <form>
+        <input id="name" type="text" placeholder="Name"/>
+        <div id="choices"></div>
+        <ul id="basket"></ul>
+    </form>
+</div>
+<script>
+    var basket = [];
+    const data = [
+        {name: 'Banana', categories: ['vegetarian', 'gluten free']},
+        {name: 'Apple', categories: ['vegetarian', 'gluten free']},
+        {name: 'Potatoes', categories: ['vegetarian', 'gluten free']},
+        {name: 'Broccoli', categories: ['vegetarian', 'gluten free']},
+        {name: 'Steak', categories: ['a barbecue lover', 'gluten free']},
+        {name: 'Burgers', categories: ['a barbecue lover']},
+        {name: 'Gluten Free Bread', categories: ['vegetarian', 'gluten free']},
+        {name: 'Bread', categories: ['vegetarian']},
+        {name: 'Battered Fish', categories: ['Fish']},
+        {name: 'Prawns', categories: ['Fish', 'gluten free']},
+        {name: 'Chips', categories: ['vegetarian', 'gluten free']}
+    ];
+    data.forEach(product => {
+        let productButton = document.createElement("button");
+        productButton.innerHTML = product.name;
+        productButton.onclick = () => {
+            basket.push(product);
+            let basketEl = document.getElementById("basket");
+            basketEl.innerHTML = '';
+            basket.forEach(product => {
+                let productElement = document.createElement("li");
+                productElement.innerHTML = product.name;
+                basketEl.appendChild(productElement);
+            });
+            return false;
+        };
+        document.getElementById("choices").appendChild(productButton);
+    });
+</script>
+<script>
+    const video = document.querySelector('video');
+    const canvas = document.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    navigator.getUserMedia({video: true, audio: false}, function (stream) {
+        video.src = window.URL.createObjectURL(stream);
+    }, function () {
+        console.log("Some weird video error.");
+    });
+
+    function storeUser() {
+        ctx.drawImage(video, 0, 0);
+        const data = new FormData();
+        data.append("json", JSON.stringify({
+            name: document.getElementById('name').value,
+            basket: basket || [],
+            image: canvas.toDataURL("image/png")
+        }));
+
+        const requestDetails = {
+            method: 'POST',
+            body: data,
+            headers: new Headers({
+                "Content-Type": "application/json"
+            }),
+            mode: 'no-cors',
+            cache: 'default'
+        };
+        fetch('http://localhost:5001/storeUser', requestDetails)
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (json) {
+                responsiveVoice.speak(json.result);
+            });
+        return false;
+    }
+
+    function deleteTestData() {
+        fetch('http://localhost:5001/deleteTestData', {
+            method: 'POST',
+            mode: 'no-cors',
+            cache: 'default'
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (json) {
+                console.log(json);
+                responsiveVoice.speak('Test data deleted.');
+            });
+
+    }
+
+</script>
+</body>
+</html>
