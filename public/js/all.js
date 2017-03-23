@@ -1,11 +1,27 @@
-var video = document.querySelector('video');
-var canvas = document.querySelector('canvas');
-var ctx = canvas.getContext('2d');
-var timer;
+const video = document.querySelector('video');
+const canvas = document.querySelector('canvas');
 
-var errorsToConsole = function (e) {
+const errorsToConsole = function (e) {
     console.log("Something went a bit wrong", e);
 };
+
+function startVideoCapture() {
+    navigator.getUserMedia({video: true, audio: false}, function (stream) {
+        video.src = window.URL.createObjectURL(stream);
+    }, errorsToConsole);
+}
+
+const ctx = canvas.getContext('2d');
+
+// video.addEventListener('click', snapshot, false);
+
+function snapshot() {
+    console.log("Taking snapshot and sending to AI");
+    ctx.drawImage(video, 0, 0);
+    microsoftDescribePicture(responsiveVoice.speak);
+}
+
+var timer;
 
 function startPolling() {
     timer = setInterval(function () {
@@ -17,32 +33,21 @@ function stopPolling() {
     clearInterval(timer);
 }
 
-function snapshot() {
-    console.log("Taking snapshot and sending to AI");
-    ctx.drawImage(video, 0, 0);
-    awsRecognizeFaces(responsiveVoice.speak);
-}
-
-function startVideoCapture() {
-    navigator.getUserMedia({video: true, audio: false}, function (stream) {
-        video.addEventListener('click', snapshot, false);
-        video.src = window.URL.createObjectURL(stream);
-    }, errorsToConsole);
-}
 
 function microsoftDescribePicture(speakFn) {
+    let apiKey = document.getElementById("ocpApiKey").value;
     const requestDetails = {
         method: 'POST',
         body: dataUrlToBlob(canvas.toDataURL("image/png")),
         headers: new Headers({
             "Content-Type": "application/octet-stream",
-            "Ocp-Apim-Subscription-Key": $("#ocpApiKey").val(),
+            "Ocp-Apim-Subscription-Key": apiKey,
         }),
         mode: 'cors',
         cache: 'default'
     };
 
-    fetch('https://api.projectoxford.ai/vision/v1.0/analyze?visualFeatures=Categories,description&subscription-key=' + $("#ocpApiKey").val(), requestDetails)
+    fetch('https://api.projectoxford.ai/vision/v1.0/analyze?visualFeatures=Categories,description&subscription-key=' + apiKey, requestDetails)
         .then(function (response) {
             return response.json();
         })

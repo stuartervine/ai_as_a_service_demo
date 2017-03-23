@@ -12,8 +12,6 @@ const server = new Hapi.Server({
     }
 });
 
-
-
 server.register(require('inert'), (err) => {
     server.connection({port: 5000});
     server.route({
